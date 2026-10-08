@@ -1,9 +1,22 @@
 from datetime import datetime, timezone
+import time
 import os
 import sys
 import requests
 from dotenv import load_dotenv 
 import logging
+
+def fetch_repo():
+    for attempt in range(1, MAX_ATTEMPTS + 1):              
+        try:
+            response = requests.get(url, headers=headers, timeout=10)
+            break                            
+        except (requests.exceptions.Timeout, requests.exceptions.ConnectionError) as e:
+            if attempt == MAX_ATTEMPTS:                 
+                raise                        
+            logging.warning(f"Attempt {attempt} of {MAX_ATTEMPTS} failed: {e}")
+            time.sleep(2 * attempt)         
+    return response  # hand the result back to whoever called fetch_repo()
 
 logging.basicConfig(
     level=logging.INFO,  # show INFO and anything more serious
@@ -25,7 +38,8 @@ if not GITHUB_TOKEN:
     sys.exit(1)  # Stop execution immediately with an error exit code
 
 
-REPO = "python/cpytho"
+REPO = "python/cpython"
+MAX_ATTEMPTS = 3
 url = f"https://api.github.com/repos/{REPO}"
 
 #Package the token securely into the HTTP request headers
@@ -36,14 +50,14 @@ headers = {
 
 try:
     #Pass the headers dictionary into the get request
-    response = requests.get(url, headers=headers, timeout=10)
+    response = fetch_repo()
     
     logging.info(f"Status Code: {response.status_code}")
     
     if response.status_code == 200:
         data = response.json()
         snapshot_date = datetime.now(timezone.utc).date().isoformat()
-        print("\n--- Repository Metrics ---")
+        
         logging.info(f"Fetched {REPO}: Snapshot date={snapshot_date}, stars={data.get('stargazers_count')}, Forks={data.get('forks_count')}, Watchers={data.get('subscribers_count')}, Open issues + PRs={data.get('open_issues_count')}")
         
         
