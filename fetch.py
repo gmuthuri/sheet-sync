@@ -6,9 +6,11 @@ import requests
 from dotenv import load_dotenv 
 import logging
 import gspread
+
+#Load variables from the local .env file
 load_dotenv()
 
-SHEET_NAME = os.getenv("SHEET_NAME")
+
 def open_sheet():
     gc = gspread.service_account(filename="service_account.json")  # log in as the robot using the key file
     return gc.open(SHEET_NAME).sheet1                     # open the spreadsheet by name, take its first tab
@@ -35,7 +37,12 @@ logging.basicConfig(
     ],
 )
 
-#Load variables from the local .env file
+SHEET_NAME = os.getenv("SHEET_NAME")
+#Prevent a silent fail: Validate the Sheet name exist
+if not SHEET_NAME:
+    logging.error("Error: 'SHEET_NAME' not found in your environment variables!")
+    logging.info("Please verify that your local '.env' file exists and contains: SHEET_NAME=your_token_here")
+    sys.exit(1)  # Stop execution immediately with an error exit code
 
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
 
@@ -66,24 +73,28 @@ try:
         data = response.json()
         snapshot_date = datetime.now(timezone.utc).date().isoformat()
 
-        row = [snapshot_date, REPO, data.get('stargazers_count'), data.get('forks_count'), data.get('subscribers_count'), data.get('open_issues_count')]                      # you fill in the four metrics, in header order
-        sheet = open_sheet()                                  # get the tab
-        sheet.append_row(row, value_input_option="RAW")       # add the row, stored exactly as sent
+        row = [snapshot_date, REPO, data.get('stargazers_count'), data.get('forks_count'), data.get('subscribers_count'), data.get('open_issues_count')]                      
+        sheet = open_sheet()                                  # open the tab first, so we can read it
         
-        logging.info("Row added")
-        logging.info(f"Fetched {REPO}: Snapshot date={snapshot_date}, stars={data.get('stargazers_count')}, Forks={data.get('forks_count')}, Watchers={data.get('subscribers_count')}, Open issues + PRs={data.get('open_issues_count')}")
-        
-        
+        existing = sheet.get_all_values()                     # every row currently in the sheet
+        seen = {(r[0], r[1]) for r in existing if len(r) >= 2}  # (date, repo) pairs; skips any short or blank rows
+
+        if (snapshot_date, REPO) in seen:                     # has this exact pair been recorded already?
+            logging.info(f"Skipped: {REPO} already recorded for {snapshot_date}")
+        else:
+            sheet.append_row(row, value_input_option="RAW")   # only write when the pair is new and stored exactly as sent                  
+            logging.info(f"Fetched and Row Added for {REPO} on {snapshot_date} {REPO}: Snapshot date={snapshot_date}, stars={data.get('stargazers_count')}, Forks={data.get('forks_count')}, Watchers={data.get('subscribers_count')}, Open issues + PRs={data.get('open_issues_count')}")
+          
         
     else:    
         logging.error(f"Failed: {response.status_code} {response.reason}")
         sys.exit(1)  # non-zero exit code = "this run failed"
 
 except requests.exceptions.Timeout:
-    logging.error("Error: The request timed out! The network connection took longer than 10 seconds.")
+    logging.error("Error: The request timed out! The network connection Timed out after 3 attempts.")
     sys.exit(1)
 
-except gspread.exceptions.APIError as e:                      # Google rejected a request (e.g. sheet not shared)
+except (gspread.exceptions.GSpreadException, FileNotFoundError) as e:                      # Google rejected a request (e.g. sheet not shared)
     logging.error(f"Google Sheets error: {e}")
     sys.exit(1)
 
