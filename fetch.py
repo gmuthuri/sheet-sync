@@ -5,6 +5,14 @@ import sys
 import requests
 from dotenv import load_dotenv 
 import logging
+import gspread
+load_dotenv()
+
+SHEET_NAME = os.getenv("SHEET_NAME")
+def open_sheet():
+    gc = gspread.service_account(filename="service_account.json")  # log in as the robot using the key file
+    return gc.open(SHEET_NAME).sheet1                     # open the spreadsheet by name, take its first tab
+
 
 def fetch_repo():
     for attempt in range(1, MAX_ATTEMPTS + 1):              
@@ -28,7 +36,7 @@ logging.basicConfig(
 )
 
 #Load variables from the local .env file
-load_dotenv()
+
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
 
 #Prevent a silent fail: Validate the token immediately
@@ -57,7 +65,12 @@ try:
     if response.status_code == 200:
         data = response.json()
         snapshot_date = datetime.now(timezone.utc).date().isoformat()
+
+        row = [snapshot_date, REPO, data.get('stargazers_count'), data.get('forks_count'), data.get('subscribers_count'), data.get('open_issues_count')]                      # you fill in the four metrics, in header order
+        sheet = open_sheet()                                  # get the tab
+        sheet.append_row(row, value_input_option="RAW")       # add the row, stored exactly as sent
         
+        logging.info("Row added")
         logging.info(f"Fetched {REPO}: Snapshot date={snapshot_date}, stars={data.get('stargazers_count')}, Forks={data.get('forks_count')}, Watchers={data.get('subscribers_count')}, Open issues + PRs={data.get('open_issues_count')}")
         
         
@@ -68,6 +81,10 @@ try:
 
 except requests.exceptions.Timeout:
     logging.error("Error: The request timed out! The network connection took longer than 10 seconds.")
+    sys.exit(1)
+
+except gspread.exceptions.APIError as e:                      # Google rejected a request (e.g. sheet not shared)
+    logging.error(f"Google Sheets error: {e}")
     sys.exit(1)
 
 except requests.exceptions.RequestException as e:
