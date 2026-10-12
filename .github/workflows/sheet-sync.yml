@@ -1,0 +1,22 @@
+name: Sheet Sync
+on:
+  workflow_dispatch:                      # manual "Run workflow" button only, for now
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4         # copies your repo onto the runner
+      - uses: actions/setup-python@v5     # installs Python
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements.txt   # installs your three libraries
+      #Step that writes the key file
+      - env:
+          SA_JSON: ${{ secrets.SERVICE_ACCOUNT_JSON }}   # the secret becomes an environment variable
+        run: printf '%s' "$SA_JSON" > service_account.json   # write it to a file, exactly as stored
+      
+      # Step that runs fetch.py, with the environment variables
+      - env:
+          GITHUB_TOKEN: ${{ secrets.GH_API_TOKEN }}    # left: the name the script reads. right: the secret's name on GitHub
+          SHEET_NAME: ${{ secrets.SHEET_NAME }}  # one line per secret
+        run: python fetch.py                   # one run: per step, with the program name first
