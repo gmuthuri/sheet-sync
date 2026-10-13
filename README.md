@@ -17,7 +17,7 @@ This project replaces that routine. Once a day, on its own, it fetches the lates
 
 ## What the sheet looks like
 
-docs/sheet.png
+![Sample sheet with daily rows](docs/sheet.png)
 
 ## How it protects your data
 
@@ -30,19 +30,19 @@ docs/sheet.png
 ## Sample log output
 
 ```text
-2026-10-12 09:30:08,734 ERROR Error: 'SHEET_NAME' not found in your environment variables!
-2026-10-12 09:30:08,734 INFO Please verify that your local '.env' file exists and contains: SHEET_NAME=your_token_here
-2026-10-12 11:27:47,332 WARNING Attempt 1 of 3 failed: HTTPSConnectionPool(host='api.github.com', port=443): Read timed out. (read timeout=10)
-2026-10-12 11:28:13,303 INFO Status Code: 200
-2026-10-12 11:28:24,078 INFO Skipped: python/cpython already recorded for 2026-10-12
-2026-10-12 14:41:20,151 INFO Status Code: 200
-2026-10-12 14:41:27,447 INFO Fetched and Row Added for python/cpython on 2026-10-12 python/cpython: Snapshot date=2026-10-12, stars=77614, Forks=38101, Watchers=1660, Open issues + PRs=9723
+2026-10-13 11:20:54,774 INFO Row Added: python/cpython on  Snapshot date=2026-10-13, stars=77636, Forks=38128, Watchers=1661, Open issues + PRs=9713
+2026-10-13 11:49:21,483 INFO Status Code: 200
+2026-10-13 11:49:25,583 INFO Skipped: python/cpython already recorded for 2026-10-13
+2026-10-13 11:20:40,547 INFO Status Code: 200
+2026-10-13 11:20:40,548 ERROR API response is missing or invalid fields: ['stargazers_count1']
+2026-10-13 10:26:40,725 WARNING Attempt 2 of 3 failed: HTTPSConnectionPool(host='api.github.com', port=443): Max retries exceeded with url: /repos/python/cpytho (Caused by NameResolutionError("HTTPSConnection(host='api.github.com', port=443): Failed to resolve 'api.github.com' ([Errno 11001] getaddrinfo failed)"))
+
 ```
 
 
 ## Want something like this for your business?
 
-I build small automations that move data from a web service into Google Sheets and keep it there reliably. Message me on [mgibum@gmail.com]
+I build small automations that move data from a web service into Google Sheets and keep it there reliably. 
 
 ---
 
