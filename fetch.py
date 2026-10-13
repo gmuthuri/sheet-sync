@@ -10,6 +10,8 @@ import gspread                           # talks to Google Sheets
 # Read .env into the environment. This must run BEFORE any os.getenv() call below.
 load_dotenv()
 MAX_ATTEMPTS = 3
+REPO = "python/cpython"
+FIELDS = ["stargazers_count", "forks_count", "subscribers_count", "open_issues_count"]    # the field names this API must give us
 
 def open_sheet():
     # Log in as the service account ("the robot") with its key file, open the spreadsheet
@@ -68,7 +70,7 @@ if not GITHUB_TOKEN:
     sys.exit(1)  # Stop execution immediately with an error exit code
 
 
-REPO = "python/cpython"
+
 
 url = f"https://api.github.com/repos/{REPO}"
 
@@ -94,7 +96,7 @@ try:
         data = response.json()
         
         snapshot_date = datetime.now(timezone.utc).date().isoformat()
-        FIELDS = ["stargazers_count", "forks_count", "subscribers_count", "open_issues_count"]    # the field names this API must give us
+        
 
         bad = [f for f in FIELDS if not isinstance(data.get(f), (int, float))]  # names that are missing or not numbers
         if bad:
@@ -117,7 +119,7 @@ try:
             # RAW = store the text exactly as sent. Otherwise Sheets may turn "2026-10-12" into a
             # real date value and the duplicate check would stop matching.
             sheet.append_row(row, value_input_option="RAW")   # only write when the pair is new and stored exactly as sent                  
-            logging.info(f"Row Added: {REPO} on  Snapshot date={snapshot_date}, stars={data.get('stargazers_count')}, Forks={data.get('forks_count')}, Watchers={data.get('subscribers_count')}, Open issues + PRs={data.get('open_issues_count')}")
+            logging.info(f"Row Added: {REPO} on Snapshot date={snapshot_date}, stars={data.get('stargazers_count')}, Forks={data.get('forks_count')}, Watchers={data.get('subscribers_count')}, Open issues + PRs={data.get('open_issues_count')}")
           
         
     else:    
@@ -125,7 +127,7 @@ try:
         sys.exit(1)  # non-zero exit code = "this run failed"
 
 except requests.exceptions.Timeout:
-    logging.error("Error: The request timed out! The network connection Timed out after {MAX_ATTEMPTS} attempts.")
+    logging.error(f"Error: The network connection Timed out after {MAX_ATTEMPTS} attempts.")
     sys.exit(1)
 
 except (gspread.exceptions.GSpreadException, FileNotFoundError) as e:                      # Google rejected a request (e.g. sheet not shared)
@@ -136,6 +138,6 @@ except requests.exceptions.RequestException as e:
     logging.error(f"An error occurred: {e}")
     sys.exit(1)
 
-except Exception as e:
+except Exception:
     logging.exception("Unexpected error") # logs the full traceback
     sys.exit(1)

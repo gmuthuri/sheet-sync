@@ -2,7 +2,7 @@ name: Sheet Sync
 on:
   workflow_dispatch:                      
   schedule:
-    - cron: "50 4 * * *"
+    - cron: "0 1 * * *"
 jobs:
   sync:
     runs-on: ubuntu-latest
