@@ -53,7 +53,7 @@ if not GITHUB_TOKEN:
     sys.exit(1)  # Stop execution immediately with an error exit code
 
 
-REPO = "python/cpython"
+REPO = "python/cpytho"
 MAX_ATTEMPTS = 3
 url = f"https://api.github.com/repos/{REPO}"
 
