@@ -1,4 +1,5 @@
-venv/
+.venv/
 .env
 *.log
 service_account.json
+venv

@@ -1,6 +1,6 @@
 name: Sheet Sync
 on:
-  workflow_dispatch:                      # manual "Run workflow" button only, for now
+  workflow_dispatch:                      
   schedule:
     - cron: "7 6 * * *"
 jobs:
